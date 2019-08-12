@@ -1,6 +1,6 @@
 # C++ Library for Mobile Private Contact Discovery
 
- C++ library implementing several OPRF protocols and using them for Private Set Intersection
+C++ library implementing several OPRF protocols and using them for Private Set Intersection
 
 ## Requirements
 
@@ -36,6 +36,14 @@ droidCrypto/tests/test_psi_oprf_lowmc 1 10
 
 This performs a set intersection using 2^{20} elements on the server (0) side and 2^{10} elements on the client (1) side. Only the item with index 0 is common for both sets, so the client program should only print "Intersection C0" (errors may occur based on the parameters of the cuckoo filter, but the default parameters should have an error probablity of 2^{-30}).
 
+## Disclaimer
+
+This code is provided as a experimental implementation for testing purposes and should not be used in a productive environment. We cannot guarantee security and correctness.
+
+## Android Test Application
+
+We provide a small benchmarking application for modern Android phones at [mobile_psi_android](https://github.com/contact-discovery/mobile_psi_android).
+
 ## Acknowledgements
 
 This project uses several other projects as building blocks.
@@ -46,6 +54,7 @@ This project uses several other projects as building blocks.
 * The garbled circuit interface is inspired by [FlexSC](https://github.com/wangxiao1254/FlexSC).
 * The used cuckoo filter implementation is [cuckoofilter](https://github.com/efficient/cuckoofilter).
 * The implementation of LowMC is based on [Picnic](https://github.com/IAIK/Picnic).
+
 
 ## References
 
