@@ -16,6 +16,7 @@ class PhasedPSIServer {
         time_base(0),
         time_online(0){};
 
+  virtual ~PhasedPSIServer(){};
   virtual void doPSI(std::vector<block> &elements) {
     Setup(elements);
     Base();

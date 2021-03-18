@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <droidCrypto/ChannelWrapper.h>
-#include <droidCrypto/Curve.h>
 #include <droidCrypto/PRNG.h>
+#include <droidCrypto/RCurve.h>
 #include <droidCrypto/SHA1.h>
 #include <droidCrypto/SHAKE128.h>
 #include <droidCrypto/ot/TwoChooseOne/KosOtExtReceiver.h>
@@ -89,14 +89,14 @@ std::vector<size_t> ECNRPSIClient::Online(std::vector<block> &elements) {
   }
   auto time5 = std::chrono::high_resolution_clock::now();
   channel_.send(ot_choices_.data(), elements.size() * 128 / 8);
-  EllipticCurve curve(P256, p.get<block>());
+  REllipticCurve curve;
   std::vector<std::array<uint8_t, 33>> prfOut;
   prfOut.reserve(elements.size());
   for (auto i = 0; i < elements.size(); i++) {
     BitVector bv;
     bv.assign(elements[i]);
-    EccNumber r(curve, 1);
-    EccNumber rj(curve, 0);
+    REccNumber r(curve, 1);
+    REccNumber rj(curve, 0);
     std::array<uint8_t, 33> buf{};
     std::array<uint8_t, 128 * 32 + 33> buf1{};
     channel_.recv(buf1.data(), buf1.size());
@@ -114,7 +114,7 @@ std::vector<size_t> ECNRPSIClient::Online(std::vector<block> &elements) {
       rj.fromBytes(buf.data());
       r *= rj;
     }
-    EccPoint gT(curve);
+    REccPoint gT(curve);
     gT.fromBytes(buf1.data() + 128 * 32);
     gT = gT * r;
     // std::cout << gT << "\n";

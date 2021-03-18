@@ -1,4 +1,5 @@
 #include <droidCrypto/ChannelWrapper.h>
+#include <droidCrypto/RCurve.h>
 #include <droidCrypto/RandomOracle.h>
 #include <droidCrypto/ot/NaorPinkas.h>
 
@@ -9,26 +10,25 @@ namespace droidCrypto {
 void NaorPinkas::receive(const BitVector &choices, span<block> messages,
                          PRNG &prng, ChannelWrapper &chan) {
   auto nSndVals(2);
-  const auto &params = k233;
 
-  auto mStart = 0;
-  auto mEnd = messages.size();
+  size_t mStart = 0;
+  size_t mEnd = messages.size();
   // Log::v("naor-pinkas-r", "messages: %zu", messages.size());
 
-  EllipticCurve curve(params, prng.get<block>());
+  REllipticCurve curve;
 
-  auto &g = curve.getGenerator();
+  auto g = curve.getGenerator();
+  REccBrick brick_g(g);
   uint64_t fieldElementSize = g.sizeBytes();
 
   // Log::v("naor-pinkas-r", "fieldElement: %zu", fieldElementSize);
   std::vector<uint8_t> sendBuff(messages.size() * fieldElementSize);
   std::vector<uint8_t> cBuff(nSndVals * fieldElementSize);
 
-  EccPoint PK0(curve);
-  EccBrick bg(g);
+  REccPoint PK0(curve);
 
-  std::vector<EccNumber> pK;
-  std::vector<EccPoint> PK_sigma, pC;
+  std::vector<REccNumber> pK;
+  std::vector<REccPoint> PK_sigma, pC;
 
   pK.reserve(mEnd - mStart);
   PK_sigma.reserve(mEnd - mStart);
@@ -39,13 +39,13 @@ void NaorPinkas::receive(const BitVector &choices, span<block> messages,
     pK.emplace_back(curve);
     pK[j].randomize(prng);
 
-    // using brickexp which has the base of g, compute
+    // compute
     //
     //      PK_sigma[i] = g ^ pK[i]
     //
     // where pK[i] is just a random number in Z_p
     PK_sigma.emplace_back(curve);
-    PK_sigma[j] = bg * pK[j];
+    PK_sigma[j] = brick_g * pK[j];
   }
 
   // get the values from the channel
@@ -77,14 +77,14 @@ void NaorPinkas::receive(const BitVector &choices, span<block> messages,
 
   // resuse this space, not the data of PK0...
   auto &gka = PK0;
+  REccBrick brick_pc0(pC[0]);
   RandomOracle sha(sizeof(block));
 
   std::vector<uint8_t> buff(fieldElementSize);
-  EccBrick bc(pC[0]);
 
   for (uint64_t i = mStart, j = 0; i < mEnd; ++i, ++j) {
     // now compute g ^(a * k) = (g^a)^k
-    gka = bc * pK[j];
+    gka = brick_pc0 * pK[j];
     gka.toBytes(buff.data());
 
     sha.Reset();
@@ -103,28 +103,27 @@ void NaorPinkas::receive(const BitVector &choices, span<block> messages,
 void NaorPinkas::send(span<std::array<block, 2>> messages, PRNG &prng,
                       ChannelWrapper &chan) {
   size_t nSndVals(2);
-  auto &params = k233;
-  auto seed = prng.get<block>();
-  EllipticCurve curve(params, seed);
-  EccNumber alpha(curve, prng);
-  EccNumber tmp(curve);
-  std::vector<EccPoint> pC;
+  REllipticCurve curve;
+  REccNumber alpha(curve, prng);
+  REccNumber tmp(curve);
+  std::vector<REccPoint> pC;
   pC.reserve(nSndVals);
 
-  const EccPoint &g = curve.getGenerator();
+  const REccPoint g = curve.getGenerator();
+  REccBrick brick_g(g);
   uint64_t fieldElementSize = g.sizeBytes();
 
   std::vector<uint8_t> sendBuff(nSndVals * fieldElementSize);
 
   pC.emplace_back(curve);
-  pC[0] = g * alpha;
+  pC[0] = brick_g * alpha;
   pC[0].toBytes(sendBuff.data());
 
   for (uint64_t u = 1; u < nSndVals; u++) {
     pC.emplace_back(curve);
     tmp.randomize(prng);
 
-    pC[u] = g * tmp;
+    pC[u] = brick_g * tmp;
     pC[u].toBytes(sendBuff.data() + u * fieldElementSize);
   }
 
@@ -141,7 +140,7 @@ void NaorPinkas::send(span<std::array<block, 2>> messages, PRNG &prng,
   // Log::v("naor-pinkas-s", "%s", test.hex().c_str());
   // Log::v("naor-pinkas-s", "After recv call!");
 
-  EccPoint pPK0(curve), PK0a(curve), fetmp(curve);
+  REccPoint pPK0(curve), PK0a(curve), fetmp(curve);
 
   std::vector<uint8_t> hashInBuff(fieldElementSize);
   RandomOracle sha(sizeof(block));
@@ -168,160 +167,14 @@ void NaorPinkas::send(span<std::array<block, 2>> messages, PRNG &prng,
   }
 }
 
-namespace NaorPinkasStandalone {
-void receive(const BitVector &choices, span<block> messages, PRNG &prng,
-             const std::vector<uint8_t> &recvBuff,
-             std::vector<uint8_t> &sendBuff) {
-  auto nSndVals(2);
-  const auto &params = k233;
-
-  auto mStart = 0;
-  auto mEnd = messages.size();
-  EllipticCurve curve(params, prng.get<block>());
-
-  auto &g = curve.getGenerator();
-  uint64_t fieldElementSize = g.sizeBytes();
-
-  sendBuff.resize(messages.size() * fieldElementSize);
-
-  EccPoint PK0(curve);
-  EccBrick bg(g);
-
-  std::vector<EccNumber> pK;
-  std::vector<EccPoint> PK_sigma, pC;
-
-  pK.reserve(mEnd - mStart);
-  PK_sigma.reserve(mEnd - mStart);
-  pC.reserve(nSndVals);
-
-  for (uint64_t i = mStart, j = 0; i < mEnd; ++i, ++j) {
-    // get a random value from Z_p
-    pK.emplace_back(curve);
-    pK[j].randomize(prng);
-
-    // using brickexp which has the base of g, compute
-    //
-    //      PK_sigma[i] = g ^ pK[i]
-    //
-    // where pK[i] is just a random number in Z_p
-    PK_sigma.emplace_back(curve);
-    PK_sigma[j] = bg * pK[j];
-  }
-
-  // We already have the recvBuff
-  // cRecvFuture.get();
-  auto pBufIdx = recvBuff.begin();
-
-  for (auto u = 0; u < nSndVals; u++) {
-    pC.emplace_back(curve);
-
-    pC[u].fromBytes(&*pBufIdx);
-    pBufIdx += fieldElementSize;
-  }
-
-  auto iter = sendBuff.data() + mStart * fieldElementSize;
-
-  for (uint64_t i = mStart, j = 0; i < mEnd; ++i, ++j) {
-    uint8_t choice = choices[i];
-    if (choice != 0) {
-      PK0 = pC[choice] - PK_sigma[j];
-    } else {
-      PK0 = PK_sigma[j];
-    }
-
-    PK0.toBytes(iter);
-    iter += fieldElementSize;
-  }
-
-  // resuse this space, not the data of PK0...
-  auto &gka = PK0;
-  RandomOracle sha(sizeof(block));
-
-  std::vector<uint8_t> buff(fieldElementSize);
-  EccBrick bc(pC[0]);
-
-  for (uint64_t i = mStart, j = 0; i < mEnd; ++i, ++j) {
-    // now compute g ^(a * k) = (g^a)^k
-    gka = bc * pK[j];
-    gka.toBytes(buff.data());
-
-    sha.Reset();
-    sha.Update((uint8_t *)&i, sizeof(i));
-    sha.Update(buff.data(), buff.size());
-    sha.Final(messages[i]);
-  }
-}
-
-void sendPart1(PRNG &prng, std::vector<uint8_t> &sendBuff,
-               sendParams &curveParams) {
-  size_t nSndVals(2);
-  EllipticCurve &curve = curveParams.curve;
-  EccNumber tmp(curve);
-  EccNumber &alpha = curveParams.alpha;
-  std::vector<EccPoint> &pC = curveParams.pC;
-
-  const EccPoint &g = curve.getGenerator();
-  uint64_t fieldElementSize = g.sizeBytes();
-
-  sendBuff.resize(nSndVals * fieldElementSize);
-  pC.reserve(nSndVals);
-
-  pC.emplace_back(curve);
-  pC[0] = g * alpha;
-  pC[0].toBytes(sendBuff.data());
-
-  for (uint64_t u = 1; u < nSndVals; u++) {
-    pC.emplace_back(curve);
-    tmp.randomize(prng);
-
-    pC[u] = g * tmp;
-    pC[u].toBytes(sendBuff.data() + u * fieldElementSize);
-  }
-
-  for (uint64_t u = 1; u < nSndVals; u++) pC[u] = pC[u] * alpha;
-}
-
-void sendPart2(span<std::array<block, 2>> messages, PRNG &prng,
-               const std::vector<uint8_t> &recvBuff, sendParams &curveParams) {
-  size_t nSndVals(2);
-  EllipticCurve &curve = curveParams.curve;
-  EccNumber &alpha = curveParams.alpha;
-  std::vector<EccPoint> &pC = curveParams.pC;
-  const EccPoint &g = curve.getGenerator();
-  uint64_t fieldElementSize = g.sizeBytes();
-
-  EccPoint pPK0(curve), PK0a(curve), fetmp(curve);
-
-  std::vector<uint8_t> hashInBuff(fieldElementSize);
-  RandomOracle sha(sizeof(block));
-
-  for (uint64_t i = 0; i < uint64_t(messages.size()); i++) {
-    pPK0.fromBytes(recvBuff.data() + i * fieldElementSize);
-    PK0a = pPK0 * alpha;
-    PK0a.toBytes(hashInBuff.data());
-
-    sha.Reset();
-    sha.Update((uint8_t *)&i, sizeof(i));
-    sha.Update(hashInBuff.data(), hashInBuff.size());
-    sha.Final(messages[i][0]);
-
-    for (uint64_t u = 1; u < nSndVals; u++) {
-      fetmp = pC[u] - PK0a;
-      fetmp.toBytes(hashInBuff.data());
-
-      sha.Reset();
-      sha.Update((uint8_t *)&i, sizeof(i));
-      sha.Update(hashInBuff.data(), hashInBuff.size());
-      sha.Final(messages[i][u]);
-    }
-  }
-}
-}  // namespace NaorPinkasStandalone
 }  // namespace droidCrypto
 
-JNIEXPORT void JNICALL Java_com_example_mobile_1psi_droidCrypto_OT_NaorPinkas_recv(
-    JNIEnv *env, jobject /*this*/, jobject messages, jbyteArray choices,
-    jobject channel) {
+JNIEXPORT void JNICALL
+Java_com_example_mobile_1psi_droidCrypto_OT_NaorPinkas_recv(JNIEnv *env,
+                                                            jobject /*this*/,
+                                                            jobject messages,
+                                                            jbyteArray choices,
+                                                            jobject channel) {
   droidCrypto::NaorPinkas np;
   droidCrypto::JavaChannelWrapper chan(env, channel);
   droidCrypto::PRNG p = droidCrypto::PRNG::getTestPRNG();
@@ -346,8 +199,11 @@ JNIEXPORT void JNICALL Java_com_example_mobile_1psi_droidCrypto_OT_NaorPinkas_re
   // Log::v("naor-pinkas-r", "Native Recv done!");
 }
 
-JNIEXPORT void JNICALL Java_com_example_mobile_1psi_droidCrypto_OT_NaorPinkas_send(
-    JNIEnv *env, jobject /*this*/, jobject messages, jobject channel) {
+JNIEXPORT void JNICALL
+Java_com_example_mobile_1psi_droidCrypto_OT_NaorPinkas_send(JNIEnv *env,
+                                                            jobject /*this*/,
+                                                            jobject messages,
+                                                            jobject channel) {
   droidCrypto::NaorPinkas np;
   droidCrypto::JavaChannelWrapper chan(env, channel);
   droidCrypto::PRNG p = droidCrypto::PRNG::getTestPRNG();

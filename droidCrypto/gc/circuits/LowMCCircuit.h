@@ -17,6 +17,8 @@ extern "C" {
 }
 
 namespace droidCrypto {
+// round to nearest square for optimal window size
+constexpr uint32_t FOUR_RUSSIAN_WINDOW_SIZE = 8;
 class GCEnv;
 
 //    class LowMCCircuit : public Circuit{
@@ -55,7 +57,7 @@ class GCEnv;
 //            env); void FourRussiansMatrixMult(std::vector<WireLabel>& state,
 //            uint32_t lowmcstatesize, GCEnv& env);
 //
-//            code* m_tGrayCode;
+//            GrayCode mGrayCode;
 //            uint32_t m_constCtr;
 //            uint32_t m_linCtr;
 //            BitVector m_roundconst;
@@ -107,7 +109,7 @@ class SIMDLowMCCircuit : public SIMDCircuit {
   void LowMCRLLMult(std::vector<SIMDWireLabel> &val, uint32_t round,
                     SIMDGCEnv &env);
 
-  code *m_tGrayCode;
+  GrayCode mGrayCode;
 };
 
 class SIMDLowMCCircuitPhases : public SIMDCircuitPhases {
@@ -154,14 +156,13 @@ class SIMDLowMCCircuitPhases : public SIMDCircuitPhases {
   void LowMCRLLMult(std::vector<SIMDWireLabel> &val, uint32_t round,
                     SIMDGCEnv &env);
 
-  code *m_tGrayCode;
+  GrayCode mGrayCode;
 };
 }  // namespace droidCrypto
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_mobile_1psi_droidCrypto_TestAsyncTask_garbleLowMC(JNIEnv *env,
-                                                              jobject /*this*/,
-                                                              jobject channel);
+Java_com_example_mobile_1psi_droidCrypto_TestAsyncTask_garbleLowMC(
+    JNIEnv *env, jobject /*this*/, jobject channel);
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_example_mobile_1psi_droidCrypto_TestAsyncTask_evaluateLowMC(

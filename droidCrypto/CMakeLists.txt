@@ -4,8 +4,25 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_subdirectory(miracl)
 add_subdirectory(GSL)
+
+# RELIC configuration
+# set RELIC to build Prime EC
+set(DOCUM OFF CACHE BOOL "Build RELIC documentation") 
+set(WITH "BN;DV;FP;EP;MD" CACHE STRING "RELIC features") 
+set(FP_PRIME "256" CACHE STRING "The prime modulus size in bits.")
+set(MULTI "PTHREAD" CACHE STRING "Multithreading API.")
+if ("${ANDROID}")
+set(OPSYS "DROID" CACHE STRING "Operating system.")
+else()
+set(OPSYS "LINUX" CACHE STRING "Operating system.")
+endif()
+set(TESTS "0" CACHE STRING "Build and run tests INTEGER times.")
+set(BENCH "0" CACHE STRING "Build and run benchmarks n*n times.")
+SET(SHLIB OFF CACHE BOOL "Build Shared Library")
+SET(STLIB ON CACHE BOOL "Build Static Library")
+add_subdirectory(relic)
+# RELIC configuration end
 
 add_subdirectory(keccak)
 add_subdirectory(lowmc)
@@ -17,7 +34,7 @@ set(SRCS
   AES.cpp
   PRNG.cpp
   Defines.cpp
-  Curve.cpp
+  RCurve.cpp
   SHA1.cpp
   utils/Utils.cpp
   utils/Log.cpp
@@ -36,7 +53,6 @@ set(SRCS
   ot/TwoChooseOne/KosDotExtSender.cpp
   ChannelWrapper.cpp
   SecureRandom.cpp
-  utils/graycode.cpp
   gc/WireLabel.cpp
   gc/HalfGate.cpp
   gc/circuits/Circuit.cpp
@@ -107,11 +123,13 @@ else ()
 endif ()
 
 target_include_directories(droidcrypto PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../")
+get_target_property(RELIC_INCLUDES relic_s INCLUDE_DIRECTORIES)
+target_include_directories(droidcrypto PUBLIC "${RELIC_INCLUDES}")
 
 target_link_libraries(droidcrypto
-  miracl
   SimplestOT
   GSL
+  relic_s 
   )
 
 if ("${ANDROID}")
@@ -119,6 +137,11 @@ if ("${ANDROID}")
     android
     log
     )
+  # relic brings a -lpthread to the linker which we do not want on android,
+  # so we create a dummy pthread library to link against
+  # this is a pretty ugly fix, but it works
+  add_library(pthread Defines.h)
+  set_property(TARGET pthread PROPERTY LINKER_LANGUAGE CXX)
 else ()
   target_include_directories(droidcrypto PUBLIC ${JNI_INCLUDE_DIRS})
   target_include_directories(droidcrypto PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/lowmc")
