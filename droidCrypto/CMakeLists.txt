@@ -53,7 +53,6 @@ set(SRCS
   ot/TwoChooseOne/KosDotExtSender.cpp
   ChannelWrapper.cpp
   SecureRandom.cpp
-  utils/graycode.cpp
   gc/WireLabel.cpp
   gc/HalfGate.cpp
   gc/circuits/Circuit.cpp
