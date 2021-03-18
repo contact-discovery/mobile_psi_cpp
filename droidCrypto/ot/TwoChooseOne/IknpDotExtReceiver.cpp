@@ -226,7 +226,6 @@ jlong Java_com_example_mobile_1psi_droidCrypto_OT_IknpDoTExtReceiver_init(
   droidCrypto::IknpDotExtReceiver *receiver =
       new droidCrypto::IknpDotExtReceiver();
   void *inputPtr = env->GetDirectBufferAddress(baseOTs);
-  jlong inputLength = env->GetDirectBufferCapacity(baseOTs);
   droidCrypto::span<std::array<droidCrypto::block, 2>> baseOTspan(
       (std::array<droidCrypto::block, 2> *)inputPtr,
       droidCrypto::gOtExtBaseOtCount);

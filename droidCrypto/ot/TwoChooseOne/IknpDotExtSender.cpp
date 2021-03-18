@@ -188,7 +188,6 @@ jlong Java_com_example_mobile_1psi_droidCrypto_OT_IknpDOTExtSender_init(
     JNIEnv *env, jobject /* this */, jobject baseOTs, jbyteArray choices) {
   droidCrypto::IknpDotExtSender *sender = new droidCrypto::IknpDotExtSender();
   void *inputPtr = env->GetDirectBufferAddress(baseOTs);
-  jlong inputLength = env->GetDirectBufferCapacity(baseOTs);
 
   jbyte *choicePtr = env->GetByteArrayElements(choices, NULL);
   jlong choiceLength = env->GetArrayLength(choices);

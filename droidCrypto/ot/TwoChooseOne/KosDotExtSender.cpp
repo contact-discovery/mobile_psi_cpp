@@ -15,7 +15,7 @@ std::unique_ptr<OtExtSender> KosDotExtSender::split() {
   for (uint64_t i = 0; i < mGens.size(); ++i)
     baseRecvOts[i] = mGens[i].get<block>();
   ret->setBaseOts(baseRecvOts, mBaseChoiceBits);
-  return std::move(ret);
+  return ret;
 }
 
 void KosDotExtSender::setBaseOts(span<block> baseRecvOts,
