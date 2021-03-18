@@ -18,7 +18,7 @@ std::unique_ptr<OtExtSender> IknpDotExtSender::split() {
   for (uint64_t i = 0; i < mGens.size(); ++i)
     baseRecvOts[i] = mGens[i].get<block>();
   ret->setBaseOts(baseRecvOts, mBaseChoiceBits);
-  return std::move(ret);
+  return ret;
 }
 
 void IknpDotExtSender::setBaseOts(span<block> baseRecvOts,
@@ -220,7 +220,7 @@ void Java_com_example_mobile_1psi_droidCrypto_OT_IknpDOTExtSender_send(
   void *msgPtr = env->GetDirectBufferAddress(messages);
   jlong msgLength = env->GetDirectBufferCapacity(messages);
   //__android_log_print(ANDROID_LOG_VERBOSE, "Iknp-s", "msg: %p, %ld", msgPtr,
-  //msgLength);
+  // msgLength);
   droidCrypto::span<std::array<droidCrypto::block, 2>> mes(
       (std::array<droidCrypto::block, 2> *)msgPtr,
       msgLength / sizeof(std::array<droidCrypto::block, 2>));

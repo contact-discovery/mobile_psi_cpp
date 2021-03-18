@@ -40,7 +40,7 @@ std::unique_ptr<OtExtReceiver> IknpDotExtReceiver::split() {
 
   ret->setBaseOts(baseRecvOts);
 
-  return std::move(ret);
+  return ret;
 }
 
 void IknpDotExtReceiver::receive(const BitVector &choices,
@@ -245,11 +245,11 @@ void Java_com_example_mobile_1psi_droidCrypto_OT_IknpDoTExtReceiver_recv(
   jlong msgLength = env->GetDirectBufferCapacity(messages);
 
   //__android_log_print(ANDROID_LOG_VERBOSE, "Iknp-r", "msg: %p, %ld", msgPtr,
-  //msgLength);
+  // msgLength);
   jbyte *choicePtr = env->GetByteArrayElements(choices, NULL);
   jlong choiceLength = env->GetArrayLength(choices);
   //__android_log_print(ANDROID_LOG_VERBOSE, "Iknp-r", "choice: %p, %ld",
-  //choicePtr, choiceLength);
+  // choicePtr, choiceLength);
   droidCrypto::BitVector choizes((uint8_t *)choicePtr,
                                  choiceLength * 8);  // length is in bits
   env->ReleaseByteArrayElements(choices, choicePtr, JNI_ABORT);
