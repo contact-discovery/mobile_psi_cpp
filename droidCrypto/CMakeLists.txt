@@ -137,6 +137,11 @@ if ("${ANDROID}")
     android
     log
     )
+  # relic brings a -lpthread to the linker which we do not want on android,
+  # so we create a dummy pthread library to link against
+  # this is a pretty ugly fix, but it works
+  add_library(pthread Defines.h)
+  set_property(TARGET pthread PROPERTY LINKER_LANGUAGE CXX)
 else ()
   target_include_directories(droidcrypto PUBLIC ${JNI_INCLUDE_DIRS})
   target_include_directories(droidcrypto PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/lowmc")
