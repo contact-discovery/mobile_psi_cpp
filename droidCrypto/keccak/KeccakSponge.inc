@@ -34,7 +34,7 @@ http://creativecommons.org/publicdomain/zero/1.0/
 int Sponge(unsigned int rate, unsigned int capacity, const unsigned char *input,
            size_t inputByteLen, unsigned char suffix, unsigned char *output,
            size_t outputByteLen) {
-  ALIGN(SnP_stateAlignment) unsigned char state[SnP_stateSizeInBytes];
+  ATTR_ALIGN(SnP_stateAlignment) unsigned char state[SnP_stateSizeInBytes];
   unsigned int partialBlock;
   const unsigned char *curInput = input;
   unsigned char *curOutput = output;
