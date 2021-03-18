@@ -599,4 +599,20 @@ void REccNumber::randomize(const block &seed) {
   randomize(prng);
 }
 
+REccBrick::REccBrick(const REccPoint &copy) : mPoint(copy.mVal) {
+  ep_mul_pre_combs(mTable, mPoint);
+};
+
+REccPoint REccBrick::operator*(const REccNumber &multIn) const {
+  REccPoint ret;
+
+  multiply(multIn, ret);
+
+  return ret;
+};
+
+void REccBrick::multiply(const REccNumber &multIn, REccPoint &result) const {
+  ep_mul_fix_combs(result.mVal, mTable, multIn.mVal);
+};
+
 }  // namespace droidCrypto

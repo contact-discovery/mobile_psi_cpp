@@ -17,7 +17,7 @@ namespace droidCrypto {
 
 class REllipticCurve;
 class REccPoint;
-class EccBrick;
+class REccBrick;
 
 class REccNumber {
  public:
@@ -176,10 +176,24 @@ class REccPoint {
 
  private:
   friend REccNumber;
+  friend REccBrick;
   friend std::ostream &operator<<(std::ostream &out, const REccPoint &val);
 };
 
 std::ostream &operator<<(std::ostream &out, const REccPoint &val);
+
+class REccBrick {
+ public:
+  REccBrick(const REccPoint &copy);
+
+  REccPoint operator*(const REccNumber &multIn) const;
+
+  void multiply(const REccNumber &multIn, REccPoint &result) const;
+
+ private:
+  ep_t mPoint;
+  ep_t mTable[RLC_EP_TABLE_COMBS];
+};
 
 class REllipticCurve {
  public:

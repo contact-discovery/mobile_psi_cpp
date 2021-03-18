@@ -18,6 +18,7 @@ void NaorPinkas::receive(const BitVector &choices, span<block> messages,
   REllipticCurve curve;
 
   auto g = curve.getGenerator();
+  REccBrick brick_g(g);
   uint64_t fieldElementSize = g.sizeBytes();
 
   // Log::v("naor-pinkas-r", "fieldElement: %zu", fieldElementSize);
@@ -44,7 +45,7 @@ void NaorPinkas::receive(const BitVector &choices, span<block> messages,
     //
     // where pK[i] is just a random number in Z_p
     PK_sigma.emplace_back(curve);
-    PK_sigma[j] = g * pK[j];
+    PK_sigma[j] = brick_g * pK[j];
   }
 
   // get the values from the channel
@@ -76,13 +77,14 @@ void NaorPinkas::receive(const BitVector &choices, span<block> messages,
 
   // resuse this space, not the data of PK0...
   auto &gka = PK0;
+  REccBrick brick_pc0(pC[0]);
   RandomOracle sha(sizeof(block));
 
   std::vector<uint8_t> buff(fieldElementSize);
 
   for (uint64_t i = mStart, j = 0; i < mEnd; ++i, ++j) {
     // now compute g ^(a * k) = (g^a)^k
-    gka = pC[0] * pK[j];
+    gka = brick_pc0 * pK[j];
     gka.toBytes(buff.data());
 
     sha.Reset();
@@ -108,19 +110,20 @@ void NaorPinkas::send(span<std::array<block, 2>> messages, PRNG &prng,
   pC.reserve(nSndVals);
 
   const REccPoint g = curve.getGenerator();
+  REccBrick brick_g(g);
   uint64_t fieldElementSize = g.sizeBytes();
 
   std::vector<uint8_t> sendBuff(nSndVals * fieldElementSize);
 
   pC.emplace_back(curve);
-  pC[0] = g * alpha;
+  pC[0] = brick_g * alpha;
   pC[0].toBytes(sendBuff.data());
 
   for (uint64_t u = 1; u < nSndVals; u++) {
     pC.emplace_back(curve);
     tmp.randomize(prng);
 
-    pC[u] = g * tmp;
+    pC[u] = brick_g * tmp;
     pC[u].toBytes(sendBuff.data() + u * fieldElementSize);
   }
 

@@ -7,11 +7,10 @@ C++ library implementing several OPRF protocols and using them for Private Set I
 * JAVA JNI libaries
 * C++ compiler supporting C++14
 
-
 ## Build instructions
 
 ```bash
-git submodule update --init # pull GSL
+git submodule update --init # pull GSL and RELIC
 mkdir build && cd build
 cmake ..
 make -j
