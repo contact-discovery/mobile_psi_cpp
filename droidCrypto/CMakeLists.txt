@@ -4,7 +4,6 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_subdirectory(miracl)
 add_subdirectory(GSL)
 
 # RELIC configuration
@@ -18,7 +17,7 @@ set(OPSYS "DROID" CACHE STRING "Operating system.")
 else()
 set(OPSYS "LINUX" CACHE STRING "Operating system.")
 endif()
-set(TESTS "0" CACHE STRING "Build and run tests n times.")
+set(TESTS "0" CACHE STRING "Build and run tests INTEGER times.")
 set(BENCH "0" CACHE STRING "Build and run benchmarks n*n times.")
 SET(SHLIB OFF CACHE BOOL "Build Shared Library")
 SET(STLIB ON CACHE BOOL "Build Static Library")
@@ -35,7 +34,6 @@ set(SRCS
   AES.cpp
   PRNG.cpp
   Defines.cpp
-  Curve.cpp
   RCurve.cpp
   SHA1.cpp
   utils/Utils.cpp
@@ -130,7 +128,6 @@ get_target_property(RELIC_INCLUDES relic_s INCLUDE_DIRECTORIES)
 target_include_directories(droidcrypto PUBLIC "${RELIC_INCLUDES}")
 
 target_link_libraries(droidcrypto
-  miracl
   SimplestOT
   GSL
   relic_s 
