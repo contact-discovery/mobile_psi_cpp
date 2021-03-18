@@ -49,10 +49,6 @@ class HashUtil {
   static uint32_t MurmurHash(const void *buf, size_t length, uint32_t seed = 0);
   static uint32_t MurmurHash(const std::string &s, uint32_t seed = 0);
 
-  // SuperFastHash
-  static uint32_t SuperFastHash(const void *buf, size_t len);
-  static uint32_t SuperFastHash(const std::string &s);
-
   // Null hash (shift and mask)
   static uint32_t NullHash(const void *buf, size_t length, uint32_t shiftbytes);
 
