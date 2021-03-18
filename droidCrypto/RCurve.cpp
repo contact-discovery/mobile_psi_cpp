@@ -599,8 +599,8 @@ void REccNumber::randomize(const block &seed) {
   randomize(prng);
 }
 
-REccBrick::REccBrick(const REccPoint &copy) : mPoint(copy.mVal) {
-  ep_mul_pre_combs(mTable, mPoint);
+REccBrick::REccBrick(const REccPoint &point) {
+  ep_mul_pre_combs(mTable, point);
 };
 
 REccPoint REccBrick::operator*(const REccNumber &multIn) const {

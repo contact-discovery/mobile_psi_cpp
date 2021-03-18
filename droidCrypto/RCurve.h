@@ -191,7 +191,6 @@ class REccBrick {
   void multiply(const REccNumber &multIn, REccPoint &result) const;
 
  private:
-  ep_t mPoint;
   ep_t mTable[RLC_EP_TABLE_COMBS];
 };
 
