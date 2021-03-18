@@ -48,7 +48,7 @@ We provide a small benchmarking application for modern Android phones at [mobile
 This project uses several other projects as building blocks.
 
 * The OT code is based on the public domain library [libOTe](https://github.com/osu-crypto/libOTe) by Peter Rindal.
-* Elliptic Curve operations are implemented using [MIRACL](https://github.com/miracl/MIRACL).
+* Elliptic Curve operations are implemented using [RELIC](https://github.com/relic-toolkit/relic).
 * Some of the binary circuits are based on ones from [ABY](https://github.com/encryptogroup/ABY).
 * The garbled circuit interface is inspired by [FlexSC](https://github.com/wangxiao1254/FlexSC).
 * The used cuckoo filter implementation is [cuckoofilter](https://github.com/efficient/cuckoofilter).
